@@ -4,6 +4,7 @@ from inter.interkeys import HTTP
 # 创建一个http请求库的实例对象
 http = HTTP()
 # 设置基础url地址
+# http.url = 'http://112.74.191.10:80/inter/HTTP/'
 http.seturl('http://112.74.191.10:80/inter/HTTP/')
 http.post('auth', '')
 # 保存token
