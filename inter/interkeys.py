@@ -1,5 +1,6 @@
 # coding=utf-8
 import requests, json
+from common import logger
 
 
 class HTTP:
@@ -64,10 +65,10 @@ class HTTP:
         :return: 无
         """
         try:
-            self.session.headers.remove(key)
+            self.session.headers.pop(key)
         except Exception as e:
             pass
-        self.__write_excel_res('PASS', '添加成功：' + str(self.session.headers))
+        self.__write_excel_res('PASS', '删除成功：' + str(self.session.headers))
 
     def __get_data(self,params):
         """
@@ -141,10 +142,11 @@ class HTTP:
         # 关联
         value = self.__get_relations(value)
         if res == value:
-            print('PASS')
+            logger.info('PASS')
             self.__write_excel_res('PASS', res)
             return True
         else:
+            logger.info('FAIL')
             self.__write_excel_res('FAIL', res)
             return False
 

@@ -14,6 +14,8 @@ class Res:
     def __init__(self):
         # 用于记录所有模块分组信息名称
         self.sumarry = {}
+        # 统计分组信息
+        self.groups = []
 
     def get_res(self, result_path):
         # 用于记录执行结果，逻辑为，只要分组中出现一个失败用例，则认为该分组执行失败，与flag联合使用。
@@ -93,8 +95,120 @@ class Res:
         # logger.info(self.sumarry)
         return self.sumarry
 
+    def get_groups(self, result_path):
+        # 用于记录执行结果，逻辑为，只要分组中出现一个失败用例，则认为该分组执行失败，与flag联合使用。
+        self.groups.clear()
+        # 每一个分组统计信息为列表
+        groupinfo = []
+        status = "Fail"
+        # 标识是否有失败
+        flag = True
+
+        # 统计每一个分组的用例总条数
+        totalcount = 0
+        # 统计分组用例中通过用例的条数数
+        totalpass = 0
+
+        reader = Reader()
+        reader.open_excel(result_path)
+        # 获取所有sheet页面
+        for n in reader.get_sheets():
+            # logger.info(n)
+            # 从第一个页面开始解析
+            reader.set_sheet(n)
+            # 获取sheet的行数，用来遍历
+            row = reader.rows
+            # 设置从第二行开始读
+            reader.r = 1
+
+            # 标识一个分组是否统计完
+            gflag = True
+
+            # 遍历sheet里面所有用例
+            for i in range(1, row):
+                line = reader.readline()
+                # logger.info(line)
+                # 查找记录了分组信息的行
+                # 如果第一列（分组信息）
+                if not line[0] == '':
+                    # 先保存上一步信息
+                    # 如果不是sheet最开始，就保存上一个分组统计的全部信息
+                    if not gflag:
+                        if flag:
+                            status = 'pass'
+                        else:
+                            status = 'fail'
+                        groupinfo.append(totalcount)
+                        groupinfo.append(totalpass)
+                        groupinfo.append(status)
+                        self.groups.append(groupinfo)
+
+                        # 重置下一个分组的统计信息
+                        # 每一个分组统计信息为列表
+                        groupinfo = []
+                        status = "Fail"
+                        # 标识是否有失败
+                        flag = True
+
+                        # 统计每一个分组的用例总条数
+                        totalcount = 0
+                        # 统计分组用例中通过用例的条数数
+                        totalpass = 0
+
+                    # 保存分组名字
+                    groupinfo.append(line[0])
+
+                    # 表示当前分组未统计完
+                    gflag = False
+                # 第二列（类别或用例名）不同时为空,则不是用例，执行非用例的操作
+                elif not line[1] == '':
+                    # 不做统计
+                    pass
+
+                # 非用例行判断结束
+                # 第一列信息和第二列信息均为空的行，即用例行，这时开始进行用例数、通过数、状态的统计。
+                else:
+                    # 判断执行结果列，如果为空，将flag置为false,视为该行有误，不纳入用例数量计算
+                    if len(line) < 7 or line[7] == '':
+                        flag = False
+                    # 执行结果不为空，则将用例统计数自增
+                    else:
+                        totalcount = totalcount + 1
+                        # logger.info(line)
+                        # 如果通过，则通过数和总通过数均自增
+                        if line[7] == "PASS":
+                            totalpass += 1
+                        else:
+                            # 出现了用例执行结果不是PASS的情况，则视为当前分组执行失败。
+                            flag = False
+
+            # 当一个sheet统计完成后，保存上一次统计的结果
+            if flag:
+                status = 'pass'
+            else:
+                status = 'fail'
+            groupinfo.append(totalcount)
+            groupinfo.append(totalpass)
+            groupinfo.append(status)
+            self.groups.append(groupinfo)
+
+            # 重置下一个分组的统计信息
+            # 每一个分组统计信息为列表
+            groupinfo = []
+            status = "Fail"
+            # 标识是否有失败
+            flag = True
+
+            # 统计每一个分组的用例总条数
+            totalcount = 0
+            # 统计分组用例中通过用例的条数数
+            totalpass = 0
+
+        return self.groups
+
+
 
 if __name__ == '__main__':
     res = Res()
-    r = res.get_res('../lib/results/result-HTTP接口用例.xls')
+    r = res.get_groups('../lib/result-HTTP接口用例-all.xls')
     print(r)

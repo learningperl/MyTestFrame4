@@ -84,7 +84,7 @@ class Txt:
 # 调试
 if __name__ == '__main__':
     # 读取
-    reader = Txt('../lib/conf/conf.txt')
+    reader = Txt('../conf/conf.properties')
     t = reader.read()
     print(t)
 

@@ -9,7 +9,7 @@ import logging
 """
 path = '.'
 logger = None
-# create logger
+# create logger，输出到日志文件
 # 这里可以修改开源模块的日志等级
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 c = logging.FileHandler(path + "/lib/logs/all.log", mode='a', encoding='utf8')
@@ -20,7 +20,6 @@ logger.addHandler(c)
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
 # # add formatter to ch
 ch.setFormatter(formatter)
 # add ch to logger

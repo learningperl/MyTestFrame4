@@ -1,6 +1,7 @@
 # coding:utf8
 import os, xlrd
 from xlutils.copy import copy
+from common import logger
 
 
 class Reader:
@@ -43,7 +44,7 @@ class Reader:
     def get_sheets(self):
         # 获取所有sheet的名字，并返回为一个列表
         sheets = self.workbook.sheet_names()
-        print(sheets)
+        logger.info(sheets)
         return sheets
 
     # 切换sheet页面
@@ -104,7 +105,7 @@ class Writer:
 
         # 判断要新建的文档是否存在，存在则提示
         if os.path.isfile(dstfile):
-            print("warning：" + dstfile + " file already exist!")
+            logger.warn("warning：" + dstfile + " file already exist!")
 
         # 记录要保存的文件
         self.df = dstfile
