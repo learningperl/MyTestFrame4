@@ -57,7 +57,10 @@ class Mail:
         msg = MIMEMultipart()
         msg.attach(MIMEText(text, 'html', self.mail_info['mail_encoding']))
         msg['Subject'] = Header(self.mail_info['mail_subject'], self.mail_info['mail_encoding'])
-        msg['from'] = self.mail_info['from']
+        # msg['from'] = self.mail_info['from']
+        h = Header(r'老will', 'utf-8')
+        h.append('<' + self.mail_info['from'] + '>', 'ascii')
+        msg["from"] = h
 
         logger.debug(self.mail_info)
         logger.debug(text)

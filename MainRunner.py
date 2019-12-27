@@ -9,6 +9,7 @@ import time
 from common.excelresult import Res
 from common.mail import Mail
 from common.txt import Txt
+from common.Encrypt import *
 
 
 logger.info('我的数据驱动测试框架')
@@ -53,7 +54,7 @@ mysql.init_mysql('./conf/userinfo.sql')
 
 # 逐行读取excel
 reader = Reader()
-casename = 'HTTP接口用例-all'
+casename = 'HTTP接口用例'
 reader.open_excel('./lib/%s.xls' % casename)
 writer = Writer()
 writer.copy_open('./lib/%s.xls' % casename, './lib/result-%s.xls' % casename)
@@ -96,6 +97,9 @@ writer.save_close()
 res = Res()
 details = res.get_res('./lib/result-%s.xls' % casename)
 r = res.get_groups('./lib/result-%s.xls' % casename)
+
+# 关闭jvm
+shutdown()
 
 # 邮件处理
 mail = Mail()

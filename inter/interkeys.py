@@ -1,6 +1,7 @@
 # coding=utf-8
-import requests, json
+import requests, json, jsonpath
 from common import logger
+from common.Encrypt import *
 
 
 class HTTP:
@@ -30,6 +31,23 @@ class HTTP:
         self.url = url
         self.__write_excel_res('PASS','设置成功：' + self.url)
 
+    def get(self, path, params):
+        """
+        发送get请求
+        :param path: 请求的路径
+        :param params: 请求的参数
+        :return: 无
+        """
+        params = self.__get_relations(params)
+        self.result = self.session.get(self.url + '/' + path + '?' + params)
+        try:
+            self.jsonres = json.loads(self.result.text)
+        except Exception as e:
+            self.jsonres = None
+
+        self.__write_excel_res('PASS',self.result.text)
+
+
     def post(self, path, params):
         """
         发送post请求
@@ -38,6 +56,7 @@ class HTTP:
         :return: 无
         """
         params = self.__get_relations(params)
+        params = self.__use_encrypt(params)
         self.result = self.session.post(self.url + '/' + path,
                                         data=self.__get_data(params))
         try:
@@ -127,7 +146,7 @@ class HTTP:
 
         return params
 
-    def assertequals(self,key,value):
+    def assertequals(self,jsonpathkey,value):
         """
         判断json结果里面某个键的值是否和期望值value相等
         :param key: json的键
@@ -136,12 +155,12 @@ class HTTP:
         """
         res = None
         try:
-            res = str(self.jsonres[key])
+            res = str(jsonpath.jsonpath(self.jsonres,jsonpathkey)[0])
         except Exception as e:
             pass
         # 关联
         value = self.__get_relations(value)
-        if res == value:
+        if str(res) == str(value):
             logger.info('PASS')
             self.__write_excel_res('PASS', res)
             return True
@@ -154,3 +173,21 @@ class HTTP:
         # 写入excel
         self.writer.write(self.row,7,status)
         self.writer.write(self.row,8,str(msg))
+
+    def __use_encrypt(self,params):
+        """
+        替换加密后的字符串
+        :param s: 需要加密的字符串
+        :return: 加密后的字符串
+        """
+        # 递归的思维，当字符串里面既有[,又有]的时候
+        # 反复的执行如下替换
+        if params is None:
+            return ''
+        elif params.find('[') >= 0 and params.find(']') >= 0:
+            en_s = params[params.find('[') + 1:params.find(']')]
+            en_s1 = encrypt(en_s)
+            params = params.replace('[' + en_s + ']', en_s1)
+            return self.__use_encrypt(params)
+        else:
+            return params
