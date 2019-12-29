@@ -1,6 +1,7 @@
 # coding=utf-8
 from common.Excel import Reader,Writer
 from inter.interkeys import HTTP
+from inter.soapkeys import SOAP
 import inspect
 from common import logger
 from common import config
@@ -54,7 +55,7 @@ mysql.init_mysql('./conf/userinfo.sql')
 
 # 逐行读取excel
 reader = Reader()
-casename = 'HTTP接口用例'
+casename = 'SOAP'
 reader.open_excel('./lib/%s.xls' % casename)
 writer = Writer()
 writer.copy_open('./lib/%s.xls' % casename, './lib/result-%s.xls' % casename)
@@ -70,6 +71,8 @@ obj = None
 if casetype == 'HTTP':
     # 执行http接口自动化
     obj = HTTP(writer)
+elif casetype == 'SOAP':
+    obj = SOAP(writer)
 
 for sheet in sheetname:
     # 设置当前读取的sheet页面

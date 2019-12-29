@@ -2,92 +2,68 @@
 import requests, json, jsonpath
 from common import logger
 from common.Encrypt import *
-from urllib.parse import quote
+from suds.client import Client
+import traceback
 
 
-class HTTP:
+
+class SOAP:
 
     def __init__(self,writer):
-        # session管理
-        self.session = requests.session()
-        # 添加默认头
-        self.session.headers['content-type'] = 'application/x-www-form-urlencoded'
-        self.session.headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36'
+        # 请求的client
+        self.client = None
 
-        # 基础的host地址
-        self.url = ''
+        # 保存wsdl地址
+        self.wsdl = ''
+
+        # 头的管理
+        self.headers = {}
+
         # 结果解析
         self.result = None
         self.jsonres = None
         # 关联保存参数的字典
-        self.relations = {}
+        self.relations = {'None':''}
 
         # 写入excel文件的Excel.Writer对象
         self.writer = writer
         # 记录当前需要写入的列
         self.row = 0
 
-    def seturl(self, url):
+    def setwsdl(self, url):
         """
-        设置基本url地址
+        设置wsdl地址
         :param url:
         :return:
         """
-        self.url = url
-        self.__write_excel_res('PASS','设置成功：' + self.url)
+        self.wsdl = url
+        self.client = Client(url,headers=self.headers)
+        self.__write_excel_res('PASS','设置成功：' + url)
 
-    def get(self, path, params):
-        """
-        发送get请求
-        :param path: 请求的路径
-        :param params: 请求的参数
-        :return: 无
-        """
-        params = self.__get_relations(params)
-        self.result = self.session.get(self.url + '/' + path + '?' + params)
-        try:
-            self.jsonres = json.loads(self.result.text)
-        except Exception as e:
-            self.jsonres = None
-
-        self.__write_excel_res('PASS',self.result.text)
-
-
-    def post(self, path, params):
+    def callmethod(self, name, params):
         """
         发送post请求
-        :param path: 请求的路径
+        :param name: 请求的接口名字
         :param params: 请求的参数
         :return: 无
         """
         params = self.__get_relations(params)
         params = self.__use_encrypt(params)
-        self.result = self.session.post(self.url + '/' + path,
-                                        data=self.__get_data(params))
+        params = self.__get_data(params)
         try:
-            self.jsonres = json.loads(self.result.text)
+            if params is None:
+                self.result = self.client.service.__getattr__(name)()
+            else:
+                self.result = self.client.service.__getattr__(name)(*params)
+        except Exception as e:
+            self.result = str(traceback.format_exc())
+        try:
+            self.jsonres = json.loads(self.result)
         except Exception as e:
             self.jsonres = None
 
-        self.__write_excel_res('PASS',self.result.text)
+        self.__write_excel_res('PASS',self.result)
 
-    def postnodata(self, path, params):
-        """
-        发送post请求
-        :param path: 请求的路径
-        :param params: 请求的参数
-        :return: 无
-        """
-        params = self.__get_relations(params)
-        params = self.__use_encrypt(params)
-        self.result = self.session.post(self.url + '/' + path,
-                                        data=quote(params))
-        try:
-            self.jsonres = json.loads(self.result.text)
-        except Exception as e:
-            self.jsonres = None
-
-        self.__write_excel_res('PASS',self.result.text)
 
     def addheader(self, key, value):
         """
@@ -97,8 +73,9 @@ class HTTP:
         :return: 无
         """
         value = self.__get_relations(value)
-        self.session.headers[key] = value
-        self.__write_excel_res('PASS','添加成功：'+str(self.session.headers))
+        self.headers[key] = value
+        self.client = Client(self.wsdl,headers=self.headers)
+        self.__write_excel_res('PASS','添加成功：'+str(self.headers))
 
     def removeheader(self,key):
         """
@@ -107,10 +84,11 @@ class HTTP:
         :return: 无
         """
         try:
-            self.session.headers.pop(key)
+            self.headers.pop(key)
         except Exception as e:
             pass
-        self.__write_excel_res('PASS', '删除成功：' + str(self.session.headers))
+        self.client = Client(self.wsdl,headers=self.headers)
+        self.__write_excel_res('PASS', '添加成功：' + str(self.headers))
 
     def __get_data(self,params):
         """
@@ -122,21 +100,7 @@ class HTTP:
             # 如果是空或者空字符串，都返回None
             return None
         else:
-            params_dict = {}
-            # 分割url字符串的键值对
-            list_params = params.split('&')
-            # 遍历键值对
-            for items in list_params:
-                # 如果键值对里面有'='，那么我们就取=左边为键，=右边为值
-                # 主要是支持值里面传'='
-                if items.find('=') >= 0:
-                    params_dict[quote(items[0:items.find('=')])] = quote(items[items.find('=') + 1:])
-                else:
-                    # 如果没有=，处理为键，值为空
-                    params_dict[quote(items)] = None
-
-            print(params_dict)
-            return params_dict
+            return params.split('、')
 
     def savejson(self,key,param_name):
         """
