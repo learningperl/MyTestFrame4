@@ -35,11 +35,5 @@
 # s = use_encrypt(s)
 # print(s)
 
-import traceback
-
-try:
-    print(1+'1')
-except Exception as e:
-    msg = traceback.format_exc()
-
-    print(msg)
+s = 'abcdefghijklmnkldsajfas'
+print(s[10:0])

@@ -11,10 +11,10 @@ from common.excelresult import Res
 from common.mail import Mail
 from common.txt import Txt
 from common.Encrypt import *
-
+from web.webkeys import Web
 
 logger.info('我的数据驱动测试框架')
-
+# //*[@id="rt_rt_1dtj7bet6bu81penv95n8j118q1"]/input
 
 def runcase(line,obj):
     """
@@ -55,7 +55,7 @@ mysql.init_mysql('./conf/userinfo.sql')
 
 # 逐行读取excel
 reader = Reader()
-casename = 'SOAP'
+casename = 'Web'
 reader.open_excel('./lib/%s.xls' % casename)
 writer = Writer()
 writer.copy_open('./lib/%s.xls' % casename, './lib/result-%s.xls' % casename)
@@ -68,11 +68,13 @@ reader.readline()
 casetype = reader.readline()[1]
 # 执行用例的关键字库对象
 obj = None
-if casetype == 'HTTP':
+if casetype == 'HTTP' or casetype=='':
     # 执行http接口自动化
     obj = HTTP(writer)
 elif casetype == 'SOAP':
     obj = SOAP(writer)
+elif casetype == 'WEB':
+    obj = Web(writer)
 
 for sheet in sheetname:
     # 设置当前读取的sheet页面
