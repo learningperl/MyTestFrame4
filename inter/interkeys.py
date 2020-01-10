@@ -8,6 +8,8 @@ from urllib.parse import quote
 class HTTP:
 
     def __init__(self,writer):
+        # 去掉https警告
+        requests.packages.urllib3.disable_warnings()
         # session管理
         self.session = requests.session()
         # 添加默认头
@@ -35,6 +37,7 @@ class HTTP:
         """
         self.url = url
         self.__write_excel_res('PASS','设置成功：' + self.url)
+        return True
 
     def get(self, path, params):
         """
@@ -51,7 +54,7 @@ class HTTP:
             self.jsonres = None
 
         self.__write_excel_res('PASS',self.result.text)
-
+        return True
 
     def post(self, path, params):
         """
@@ -70,6 +73,26 @@ class HTTP:
             self.jsonres = None
 
         self.__write_excel_res('PASS',self.result.text)
+        return True
+
+    def delete(self, path, params):
+        """
+        发送post请求
+        :param path: 请求的路径
+        :param params: 请求的参数
+        :return: 无
+        """
+        params = self.__get_relations(params)
+        params = self.__use_encrypt(params)
+        self.result = self.session.delete(self.url + '/' + path,
+                                        json=params)
+        try:
+            self.jsonres = json.loads(self.result.text)
+        except Exception as e:
+            self.jsonres = None
+
+        self.__write_excel_res('PASS', self.result.text)
+        return True
 
     def postnodata(self, path, params):
         """
@@ -88,6 +111,7 @@ class HTTP:
             self.jsonres = None
 
         self.__write_excel_res('PASS',self.result.text)
+        return True
 
     def addheader(self, key, value):
         """
@@ -99,6 +123,7 @@ class HTTP:
         value = self.__get_relations(value)
         self.session.headers[key] = value
         self.__write_excel_res('PASS','添加成功：'+str(self.session.headers))
+        return True
 
     def removeheader(self,key):
         """
@@ -111,6 +136,7 @@ class HTTP:
         except Exception as e:
             pass
         self.__write_excel_res('PASS', '删除成功：' + str(self.session.headers))
+        return True
 
     def __get_data(self,params):
         """
@@ -148,9 +174,11 @@ class HTTP:
         try:
             self.relations[param_name] = self.jsonres[key]
             self.__write_excel_res('PASS', self.relations)
+            return True
         except Exception as e:
             self.relations[param_name] = ''
             self.__write_excel_res('FAIL', self.relations)
+            return False
 
     def __get_relations(self,params):
         """

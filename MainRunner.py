@@ -1,5 +1,5 @@
 # coding=utf-8
-from common.Excel import Reader,Writer
+from common.Excel import Reader, Writer
 from inter.interkeys import HTTP
 from inter.soapkeys import SOAP
 import inspect
@@ -12,11 +12,14 @@ from common.mail import Mail
 from common.txt import Txt
 from common.Encrypt import *
 from web.webkeys import Web
+from app.appkeys import App
 
 logger.info('我的数据驱动测试框架')
+
+
 # //*[@id="rt_rt_1dtj7bet6bu81penv95n8j118q1"]/input
 
-def runcase(line,obj):
+def runcase(line, obj):
     """
     执行每一行用例
     :param line: 用例的数据列表
@@ -37,12 +40,11 @@ def runcase(line,obj):
     elif len(params) == 1:
         func(line[4])
     elif len(params) == 2:
-        func(line[4],line[5])
+        func(line[4], line[5])
     elif len(params) == 3:
-        func(line[4],line[5],line[6])
+        func(line[4], line[5], line[6])
     else:
         print('暂时不支持超过3个参数的关键字')
-
 
 
 # 读配置文件
@@ -62,19 +64,21 @@ writer.copy_open('./lib/%s.xls' % casename, './lib/result-%s.xls' % casename)
 
 sheetname = reader.get_sheets()
 writer.set_sheet(sheetname[0])
-starttime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-writer.write(1,3,starttime)
+starttime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+writer.write(1, 3, starttime)
 reader.readline()
 casetype = reader.readline()[1]
 # 执行用例的关键字库对象
 obj = None
-if casetype == 'HTTP' or casetype=='':
+if casetype == 'HTTP' or casetype == '':
     # 执行http接口自动化
     obj = HTTP(writer)
 elif casetype == 'SOAP':
     obj = SOAP(writer)
 elif casetype == 'WEB':
     obj = Web(writer)
+elif casetype == 'APP':
+    obj = App(writer)
 
 for sheet in sheetname:
     # 设置当前读取的sheet页面
@@ -85,17 +89,17 @@ for sheet in sheetname:
         line = reader.readline()
         # 读到哪一行，写到哪一行
         obj.row = i
-        if len(line[0]) >0 or len(line[1]) > 0:
+        if len(line[0]) > 0 or len(line[1]) > 0:
             # 分组信息，不用执行
             pass
         else:
             # 执行用例
             logger.info(line)
-            runcase(line,obj)
+            runcase(line, obj)
 
 writer.set_sheet(sheetname[0])
-endtime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-writer.write(1,4,endtime)
+endtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+writer.write(1, 4, endtime)
 writer.save_close()
 
 # 结果统计
@@ -108,24 +112,24 @@ shutdown()
 
 # 邮件处理
 mail = Mail()
-htmlmodule = Txt('./conf/'+config.config['mailtxt'])
+htmlmodule = Txt('./conf/' + config.config['mailtxt'])
 html = htmlmodule.read()[0]
 # 对模块文本进行处理
 # 替换总体统计信息
-sumlist = ['status','passrate','starttime','endtime']
+sumlist = ['status', 'passrate', 'starttime', 'endtime']
 for s in sumlist:
-    html = html.replace(s,details[s])
+    html = html.replace(s, details[s])
 
 # 生成HTML的一行内容
 alltrs = ''
 for s in r:
     tr = '<tr><td width="100" height="28" align="center" bgcolor="#FFFFFF" style="border:1px solid #ccc;">分组信息</td><td width="80" height="28" align="center" bgcolor="#FFFFFF" style="border:1px solid #ccc;">用例总数</td><td width="80" align="center" bgcolor="#FFFFFF" style="border:1px solid #ccc;">通过数</td><td width="80" align="center" bgcolor="#FFFFFF" style="border:1px solid #ccc;">状态</td></tr>'
-    tr = tr.replace('分组信息',str(s[0]))
+    tr = tr.replace('分组信息', str(s[0]))
     tr = tr.replace('用例总数', str(s[1]))
     tr = tr.replace('通过数', str(s[2]))
     tr = tr.replace('状态', str(s[3]))
     alltrs += tr
 
-html = html.replace('mailbody',alltrs)
+html = html.replace('mailbody', alltrs)
 
 mail.send(html)

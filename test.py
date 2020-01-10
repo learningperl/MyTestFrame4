@@ -1,13 +1,13 @@
 # # coding=utf-8
-# import requests,jsonpath,json
-#
-#
-# session = requests.session()
-# session.headers['referer'] = 'https://ke.qq.com/course/317690'
-# res = session.get('https://ke.qq.com/cgi-bin/comment_new/course_comment_list?cid=317690&count=10&page=0&filter_rating=0&bkn=&r=0.19680992383870177')
-# jsonres = json.loads(res.text)
+import requests,jsonpath,json
+
+
+session = requests.session()
+session.headers['referer'] = 'https://ke.qq.com/course/317690'
+res = session.get('https://ke.qq.com/cgi-bin/comment_new/course_comment_list?cid=317690&count=10&page=0&filter_rating=0&bkn=2004237477&r=0.6110000157669973')
+jsonres = json.loads(res.text)
 # value = jsonpath.jsonpath(jsonres,'$.result.items[0].nick_name')
-# print(value[0])
+print(jsonres)
 # from common.Encrypt import *
 #
 # s = '[1111]'

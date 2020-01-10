@@ -229,6 +229,7 @@ class Web:
             # 把鼠标移动到元素
             actions = ActionChains(self.driver)
             actions.move_to_element(ele).perform()
+            self.__write_excel_res('PASS', '移动到元素成功')
         except Exception as e:
             self.__write_excel_res('FAIL', traceback.format_exc())
             logger.exception(e)
@@ -237,6 +238,7 @@ class Web:
         try:
             time.sleep(2)
             self.driver.execute_script(js)
+            self.__write_excel_res('PASS', '执行js成功')
         except Exception as e:
             self.__write_excel_res('FAIL', traceback.format_exc())
             logger.exception(e)
